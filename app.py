@@ -1,6 +1,20 @@
 # ==============================================================================
 # PRODUCTION DEPLOYMENT: CLINICAL RISK ASSESSMENT & COMPREHENSIVE EXPLANATION PORTAL
 # ==============================================================================
+import sys
+import numpy
+
+# Create a compatibility bridge for NumPy 2.x random state configurations
+class PCG64XD:
+    def __init__(self, *args, **kwargs):
+        pass
+
+# Register the layout path so the pickle reader recognizes the stream state
+sys.modules['numpy.random._pcg64'] = sys.modules.get('numpy.random._pcg64', type(sys))
+if not hasattr(sys.modules['numpy.random._pcg64'], 'PCG64'):
+    setattr(sys.modules['numpy.random._pcg64'], 'PCG64', PCG64XD)
+
+
 import os
 import io
 import warnings
