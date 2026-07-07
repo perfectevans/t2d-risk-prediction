@@ -2,17 +2,21 @@
 # PRODUCTION DEPLOYMENT: CLINICAL RISK ASSESSMENT & COMPREHENSIVE EXPLANATION PORTAL
 # ==============================================================================
 import sys
-import numpy
+import numpy.random._pickle
+from numpy.random import PCG64
 
-# Create a compatibility bridge for NumPy 2.x random state configurations
-class PCG64XD:
-    def __init__(self, *args, **kwargs):
-        pass
+# Intercept NumPy's internal pickle constructor to fix the version mismatch safely
+orig_bit_generator_ctor = numpy.random._pickle.__bit_generator_ctor
 
-# Register the layout path so the pickle reader recognizes the stream state
-sys.modules['numpy.random._pcg64'] = sys.modules.get('numpy.random._pcg64', type(sys))
-if not hasattr(sys.modules['numpy.random._pcg64'], 'PCG64'):
-    setattr(sys.modules['numpy.random._pcg64'], 'PCG64', PCG64XD)
+def safe_bit_generator_ctor(bit_generator_name):
+    try:
+        return orig_bit_generator_ctor(bit_generator_name)
+    except ValueError:
+        # If the cloud version doesn't recognize the new name, fall back to default PCG64
+        return PCG64()
+
+# Apply the intercept patch
+numpy.random._pickle.__bit_generator_ctor = safe_bit_generator_ctor
 
 
 import os
