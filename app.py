@@ -28,7 +28,7 @@ st.set_page_config(page_title="T2D Risk Assessment Portal", layout="wide")
 # ==============================================================================
 @st.cache_resource
 def load_production_assets():
-    bundle_path = "outputs/models/final_t2d_production_pipeline.pkl"
+    bundle_path = "final_t2d_production_pipeline.pkl"
     try:
         return joblib.load(bundle_path)
     except FileNotFoundError:
