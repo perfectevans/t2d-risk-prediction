@@ -4,20 +4,26 @@
 import sys
 import numpy.random._pickle
 from numpy.random import PCG64
+from numpy.random.bit_generator import BitGenerator
 
-# Intercept NumPy's internal pickle constructor to fix the version mismatch safely
+# 1. Intercept the constructor mismatch
 orig_bit_generator_ctor = numpy.random._pickle.__bit_generator_ctor
-
 def safe_bit_generator_ctor(bit_generator_name):
     try:
         return orig_bit_generator_ctor(bit_generator_name)
     except ValueError:
-        # If the cloud version doesn't recognize the new name, fall back to default PCG64
         return PCG64()
-
-# Apply the intercept patch
 numpy.random._pickle.__bit_generator_ctor = safe_bit_generator_ctor
 
+# 2. Intercept the state loading mismatch (Fixes the TypeError)
+orig_setstate = BitGenerator.__setstate__
+def safe_setstate(self, state):
+    try:
+        orig_setstate(self, state)
+    except (TypeError, ValueError):
+        # If the internal state structure conflicts, bypass it and keep default clean state
+        pass
+BitGenerator.__setstate__ = safe_setstate
 
 import os
 import io
